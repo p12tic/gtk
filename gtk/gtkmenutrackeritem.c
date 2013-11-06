@@ -990,3 +990,19 @@ gtk_menu_tracker_item_may_disappear (GtkMenuTrackerItem *self)
 {
   return self->hidden_when != HIDDEN_NEVER;
 }
+
+GMenuItem *
+gtk_menu_tracker_item_get_menu_item (GtkMenuTrackerItem *self)
+{
+  g_return_val_if_fail (GTK_IS_MENU_TRACKER_ITEM (self), NULL);
+
+  return self->item;
+}
+
+const gchar *
+gtk_menu_tracker_item_get_action_namespace (GtkMenuTrackerItem *self)
+{
+  g_return_val_if_fail (GTK_IS_MENU_TRACKER_ITEM (self), NULL);
+
+  return self->action_namespace;
+}

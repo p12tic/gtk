@@ -94,4 +94,8 @@ void                    gtk_menu_tracker_item_request_submenu_shown     (GtkMenu
 
 gboolean                gtk_menu_tracker_item_get_submenu_shown         (GtkMenuTrackerItem *self);
 
+GMenuItem *             gtk_menu_tracker_item_get_menu_item             (GtkMenuTrackerItem *self);
+
+const gchar *           gtk_menu_tracker_item_get_action_namespace      (GtkMenuTrackerItem *self);
+
 #endif

@@ -122,6 +122,8 @@ include $(srcdir)/inspector/Makefile.inc
 gtk_public_h_sources = 		\
 	gtk.h			\
 	gtk-autocleanups.h	\
+	ubuntu-private.h	\
+	ubuntumenuitemfactory.h	\
 	gtkx.h			\
 	gtkx-autocleanups.h	\
 	gtk-a11y.h		\
@@ -610,6 +612,7 @@ gtk_base_c_sources = 		\
 	$(a11y_c_sources)	\
 	$(deprecated_c_sources)	\
 	$(inspector_c_sources)	\
+	ubuntumenuitemfactory.c \
 	gtkactionmuxer.c	\
 	gtkactionobserver.c	\
 	gtkactionobservable.c	\
