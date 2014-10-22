@@ -41,6 +41,7 @@ typedef struct _GtkCellRendererAccelClass         GtkCellRendererAccelClass;
  * GtkCellRendererAccelMode:
  * @GTK_CELL_RENDERER_ACCEL_MODE_GTK: GTK+ accelerators mode
  * @GTK_CELL_RENDERER_ACCEL_MODE_OTHER: Other accelerator mode
+ * GTK_CELL_RENDERER_ACCEL_MODE_MODIFIER_TAP: Bare modifiers mode
  *
  * Determines if the edited accelerators are GTK+ accelerators. If
  * they are, consumed modifiers are suppressed, only accelerators
@@ -50,7 +51,8 @@ typedef struct _GtkCellRendererAccelClass         GtkCellRendererAccelClass;
 typedef enum
 {
   GTK_CELL_RENDERER_ACCEL_MODE_GTK,
-  GTK_CELL_RENDERER_ACCEL_MODE_OTHER
+  GTK_CELL_RENDERER_ACCEL_MODE_OTHER,
+  GTK_CELL_RENDERER_ACCEL_MODE_MODIFIER_TAP
 } GtkCellRendererAccelMode;
 
 

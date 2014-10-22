@@ -188,6 +188,10 @@ gtk_cell_renderer_accel_class_init (GtkCellRendererAccelClass *cell_accel_class)
    * accepted by GTK+ are allowed, and the accelerators are rendered
    * in the same way as they are in menus.
    *
+   * If the mode is set to %GTK_CELL_RENDERER_ACCEL_MODE_MODIFIER_TAP
+   * then bare modifiers can be set as accelerators by tapping (ie:
+   * pressing and immediately releasing) them.
+   *
    * Since: 2.10
    */
   g_object_class_install_property (object_class,
@@ -519,6 +523,13 @@ struct _GtkCellEditableEventBox
   GtkCellRendererAccelMode accel_mode;
   gchar *path;
   GtkCellRenderer *cell;
+
+  /* Used to track the last modifier that was pressed down.
+   * We can then treat a directly-following release of the same key as a
+   * 'tap'.
+   */
+  GdkModifierType last_saw_state;
+  guint last_saw_keyval;
 };
 
 enum {
@@ -560,6 +571,9 @@ gtk_cell_editable_event_box_key_press_event (GtkWidget   *widget,
   GdkDisplay *display;
 
   display = gtk_widget_get_display (widget);
+
+  box->last_saw_keyval = event->keyval;
+  box->last_saw_state = event->state;
 
   if (event->is_modifier)
     return TRUE;
@@ -639,6 +653,35 @@ gtk_cell_editable_event_box_key_press_event (GtkWidget   *widget,
   else if (cleared)
     g_signal_emit (box->cell, signals[ACCEL_CLEARED], 0, box->path);
 
+  return TRUE;
+}
+
+static gboolean
+gtk_cell_editable_event_box_key_release_event (GtkWidget   *widget,
+                                               GdkEventKey *event)
+{
+  GtkCellEditableEventBox *box = (GtkCellEditableEventBox*)widget;
+
+  /* User released a modifier key right after pressing it and we're
+   * in 'modifier tap' mode: this is our new accel.
+   */
+  if (box->accel_mode == GTK_CELL_RENDERER_ACCEL_MODE_MODIFIER_TAP &&
+      event->is_modifier && event->keyval == box->last_saw_keyval)
+    {
+      /* We use the mask from the down press -- the release event
+       * has the modifier mask from the modifier key itself.
+       */
+      gtk_grab_remove (widget);
+      gtk_cell_renderer_accel_ungrab (GTK_CELL_RENDERER_ACCEL (box->cell));
+      gtk_cell_editable_editing_done (GTK_CELL_EDITABLE (widget));
+      gtk_cell_editable_remove_widget (GTK_CELL_EDITABLE (widget));
+
+      g_signal_emit (box->cell, signals[ACCEL_EDITED], 0, box->path,
+                     event->keyval, box->last_saw_state, event->hardware_keycode);
+    }
+
+
+  /* ignore all other key release events */
   return TRUE;
 }
 
@@ -724,6 +767,7 @@ gtk_cell_editable_event_box_class_init (GtkCellEditableEventBoxClass *class)
   object_class->get_property = gtk_cell_editable_event_box_get_property;
 
   widget_class->key_press_event = gtk_cell_editable_event_box_key_press_event;
+  widget_class->key_release_event = gtk_cell_editable_event_box_key_release_event;
   widget_class->unrealize = gtk_cell_editable_event_box_unrealize;
 
   g_object_class_override_property (object_class,
