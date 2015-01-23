@@ -392,6 +392,7 @@ int
 main (int argc, char **argv)
 {
   const char *basedir;
+  GtkSettings *settings;
   
   /* I don't want to fight fuzzy scaling algorithms in GPUs,
    * so unless you explicitly set it to something else, we
@@ -401,6 +402,12 @@ main (int argc, char **argv)
 
   if (!parse_command_line (&argc, &argv))
     return 1;
+
+  settings = gtk_settings_get_default ();
+
+  g_assert_nonnull (settings);
+
+  gtk_settings_set_string_property (settings, "gtk-icon-theme-name", "Adwaita", "");
 
   if (arg_base_dir)
     basedir = arg_base_dir;
