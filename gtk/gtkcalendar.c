@@ -887,10 +887,14 @@ calendar_queue_refresh (GtkCalendar *calendar)
 }
 
 static void
-calendar_set_month_next (GtkCalendar *calendar)
+calendar_set_month_next (GtkCalendar *calendar,
+                         gint         day)
 {
   gint month_len;
   GtkCalendarPrivate *priv = calendar->priv;
+
+  if (day < 0)
+    day = priv->selected_day;
 
   if (priv->display_flags & GTK_CALENDAR_NO_MONTH_CHANGE)
     return;
@@ -913,13 +917,13 @@ calendar_set_month_next (GtkCalendar *calendar)
 
   month_len = month_length[leap (priv->year)][priv->month + 1];
 
-  if (month_len < priv->selected_day)
+  if (month_len < day)
     {
       priv->selected_day = 0;
       gtk_calendar_select_day (calendar, month_len);
     }
   else
-    gtk_calendar_select_day (calendar, priv->selected_day);
+    gtk_calendar_select_day (calendar, day);
 
   calendar_queue_refresh (calendar);
 }
@@ -1312,10 +1316,14 @@ calendar_day_rectangle (GtkCalendar  *calendar,
 }
 
 static void
-calendar_set_month_prev (GtkCalendar *calendar)
+calendar_set_month_prev (GtkCalendar *calendar,
+                         gint         day)
 {
   GtkCalendarPrivate *priv = calendar->priv;
   gint month_len;
+
+  if (day < 0)
+    day = priv->selected_day;
 
   if (priv->display_flags & GTK_CALENDAR_NO_MONTH_CHANGE)
     return;
@@ -1339,16 +1347,16 @@ calendar_set_month_prev (GtkCalendar *calendar)
                  gtk_calendar_signals[MONTH_CHANGED_SIGNAL],
                  0);
 
-  if (month_len < priv->selected_day)
+  if (month_len < day)
     {
       priv->selected_day = 0;
       gtk_calendar_select_day (calendar, month_len);
     }
   else
     {
-      if (priv->selected_day < 0)
-        priv->selected_day = priv->selected_day + 1 + month_length[leap (priv->year)][priv->month + 1];
-      gtk_calendar_select_day (calendar, priv->selected_day);
+      if (day < 0)
+        day = day + 1 + month_length[leap (priv->year)][priv->month + 1];
+      gtk_calendar_select_day (calendar, day);
     }
 
   calendar_queue_refresh (calendar);
@@ -2842,10 +2850,10 @@ calendar_arrow_action (GtkCalendar *calendar,
       calendar_set_year_next (calendar);
       break;
     case ARROW_MONTH_LEFT:
-      calendar_set_month_prev (calendar);
+      calendar_set_month_prev (calendar, -1);
       break;
     case ARROW_MONTH_RIGHT:
-      calendar_set_month_next (calendar);
+      calendar_set_month_next (calendar, -1);
       break;
     default:;
       /* do nothing */
@@ -2944,21 +2952,27 @@ calendar_main_button_press (GtkCalendar    *calendar,
       day = priv->day[row][col];
 
       if (day_month == MONTH_PREV)
-        calendar_set_month_prev (calendar);
-      else if (day_month == MONTH_NEXT)
-        calendar_set_month_next (calendar);
-
-      if (!gtk_widget_has_focus (widget))
-        gtk_widget_grab_focus (widget);
-
-      if (event->button == GDK_BUTTON_PRIMARY)
         {
-          priv->in_drag = 1;
-          priv->drag_start_x = x;
-          priv->drag_start_y = y;
+          calendar_set_month_prev (calendar, day);
         }
+      else if (day_month == MONTH_NEXT)
+        {
+          calendar_set_month_next (calendar, day);
+        }
+      else
+        {
+          if (!gtk_widget_has_focus (widget))
+            gtk_widget_grab_focus (widget);
 
-      calendar_select_and_focus_day (calendar, day);
+          if (event->button == GDK_BUTTON_PRIMARY)
+            {
+              priv->in_drag = 1;
+              priv->drag_start_x = x;
+              priv->drag_start_y = y;
+            }
+
+          calendar_select_and_focus_day (calendar, day);
+        }
     }
   else if (event->type == GDK_2BUTTON_PRESS)
     {
@@ -3129,13 +3143,13 @@ gtk_calendar_scroll (GtkWidget      *widget,
     {
       if (!gtk_widget_has_focus (widget))
         gtk_widget_grab_focus (widget);
-      calendar_set_month_prev (calendar);
+      calendar_set_month_prev (calendar, -1);
     }
   else if (event->direction == GDK_SCROLL_DOWN)
     {
       if (!gtk_widget_has_focus (widget))
         gtk_widget_grab_focus (widget);
-      calendar_set_month_next (calendar);
+      calendar_set_month_next (calendar, -1);
     }
   else
     return FALSE;
@@ -3210,7 +3224,7 @@ gtk_calendar_key_press (GtkWidget   *widget,
     case GDK_KEY_Left:
       return_val = TRUE;
       if (event->state & GDK_CONTROL_MASK)
-        calendar_set_month_prev (calendar);
+        calendar_set_month_prev (calendar, -1);
       else
         {
           move_focus (calendar, -1);
@@ -3223,7 +3237,7 @@ gtk_calendar_key_press (GtkWidget   *widget,
     case GDK_KEY_Right:
       return_val = TRUE;
       if (event->state & GDK_CONTROL_MASK)
-        calendar_set_month_next (calendar);
+        calendar_set_month_next (calendar, -1);
       else
         {
           move_focus (calendar, 1);
@@ -3277,11 +3291,11 @@ gtk_calendar_key_press (GtkWidget   *widget,
 
           day = priv->day[row][col];
           if (priv->day_month[row][col] == MONTH_PREV)
-            calendar_set_month_prev (calendar);
+            calendar_set_month_prev (calendar, day);
           else if (priv->day_month[row][col] == MONTH_NEXT)
-            calendar_set_month_next (calendar);
-
-          calendar_select_and_focus_day (calendar, day);
+            calendar_set_month_next (calendar, day);
+          else
+            calendar_select_and_focus_day (calendar, day);
         }
     }
 
