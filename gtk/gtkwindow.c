@@ -7495,6 +7495,9 @@ gtk_window_realize (GtkWidget *widget)
   gtk_widget_register_window (widget, gdk_window);
   gtk_widget_set_realized (widget, TRUE);
 
+  GdkRGBA transparent = { 1.0, 1.0, 1.0, 0.0 };
+  gdk_window_set_background_rgba (gdk_window, &transparent);
+
   attributes.x = allocation.x;
   attributes.y = allocation.y;
   attributes.width = allocation.width;
