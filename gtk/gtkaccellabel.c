@@ -127,6 +127,8 @@ struct _GtkAccelLabelPrivate
 
   guint           accel_key;         /* manual accel key specification if != 0 */
   GdkModifierType accel_mods;
+
+  gchar         *accel_text;         /* already-translated accel_string */
 };
 
 GParamSpec *props[LAST_PROP] = { NULL, };
@@ -294,6 +296,7 @@ gtk_accel_label_init (GtkAccelLabel *accel_label)
   priv->accel_closure = NULL;
   priv->accel_group = NULL;
   priv->accel_string = NULL;
+  priv->accel_text = NULL;
 
   widget_node = gtk_widget_get_css_node (GTK_WIDGET (accel_label));
   priv->accel_node = gtk_css_node_new ();
@@ -343,6 +346,7 @@ gtk_accel_label_finalize (GObject *object)
   GtkAccelLabel *accel_label = GTK_ACCEL_LABEL (object);
 
   g_free (accel_label->priv->accel_string);
+  g_free (accel_label->priv->accel_text);
 
   G_OBJECT_CLASS (gtk_accel_label_parent_class)->finalize (object);
 }
@@ -942,6 +946,12 @@ gtk_accel_label_refetch (GtkAccelLabel *accel_label)
 
   g_clear_pointer (&accel_label->priv->accel_string, g_free);
 
+  if (accel_label->priv->accel_text)
+    {
+      accel_label->priv->accel_string = g_strdup (accel_label->priv->accel_text);
+      return FALSE;
+    }
+
   g_object_get (gtk_widget_get_settings (GTK_WIDGET (accel_label)),
                 "gtk-enable-accels", &enable_accels,
                 NULL);
@@ -1047,4 +1057,14 @@ gtk_accel_label_get_accel (GtkAccelLabel   *accel_label,
 
   *accelerator_key = accel_label->priv->accel_key;
   *accelerator_mods = accel_label->priv->accel_mods;
+}
+
+void
+_gtk_accel_label_set_accel_text (GtkAccelLabel *accel_label,
+                                 const gchar   *accel_text)
+{
+  g_free (accel_label->priv->accel_text);
+  accel_label->priv->accel_text = g_strdup (accel_text);
+
+  gtk_accel_label_reset (accel_label);
 }

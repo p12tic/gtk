@@ -2200,6 +2200,7 @@ gtk_menu_shell_tracker_insert_func (GtkMenuTrackerItem *item,
       g_object_bind_property (item, "role", widget, "action-role", G_BINDING_SYNC_CREATE);
       g_object_bind_property (item, "toggled", widget, "toggled", G_BINDING_SYNC_CREATE);
       g_object_bind_property (item, "accel", widget, "accel", G_BINDING_SYNC_CREATE);
+      g_object_bind_property (item, "accel-text", widget, "accel-text", G_BINDING_SYNC_CREATE);
 
       g_signal_connect (widget, "activate", G_CALLBACK (gtk_menu_shell_item_activate), item);
       gtk_widget_show (widget);

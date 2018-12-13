@@ -76,6 +76,8 @@ gboolean                gtk_menu_tracker_item_get_toggled               (GtkMenu
 
 const gchar *           gtk_menu_tracker_item_get_accel                 (GtkMenuTrackerItem *self);
 
+const gchar *           gtk_menu_tracker_item_get_accel_text            (GtkMenuTrackerItem *self);
+
 GMenuModel *           _gtk_menu_tracker_item_get_link                  (GtkMenuTrackerItem *self,
                                                                          const gchar        *link_name);
 
