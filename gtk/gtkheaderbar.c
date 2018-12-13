@@ -34,6 +34,10 @@
 
 #include <string.h>
 
+#ifdef GDK_WINDOWING_X11
+#include "x11/gdkx.h"
+#endif
+
 /**
  * SECTION:gtkheaderbar
  * @Short_description: A box with a centered child
@@ -72,6 +76,7 @@ struct _GtkHeaderBarPrivate
   GtkWidget *custom_title;
   gint spacing;
   gboolean has_subtitle;
+  gboolean unity_environment;
 
   GList *children;
 
@@ -267,6 +272,35 @@ _gtk_header_bar_update_separator_visibility (GtkHeaderBar *bar)
     gtk_widget_set_visible (priv->titlebar_end_separator, have_visible_at_end);
 }
 
+static void
+check_title_visibility (GtkHeaderBar *bar)
+{
+  GtkHeaderBarPrivate *priv = gtk_header_bar_get_instance_private (bar);
+  gboolean visible = TRUE;
+
+  if (!priv->title_label)
+    return;
+
+  if (priv->unity_environment)
+    {
+      GtkWidget *widget = GTK_WIDGET (bar);
+      GtkWidget *toplevel = gtk_widget_get_toplevel (widget);
+
+      if (GTK_IS_WINDOW (toplevel))
+        {
+          GtkWindow *window = GTK_WINDOW (toplevel);
+
+          if (gtk_window_is_maximized (window) &&
+              gtk_window_get_titlebar (window) == widget)
+            {
+              visible = FALSE;
+            }
+        }
+    }
+
+  gtk_widget_set_visible (priv->title_label, visible);
+}
+
 void
 _gtk_header_bar_update_window_buttons (GtkHeaderBar *bar)
 {
@@ -299,6 +333,20 @@ _gtk_header_bar_update_window_buttons (GtkHeaderBar *bar)
     }
 
   priv->titlebar_icon = NULL;
+  window = GTK_WINDOW (toplevel);
+
+  if (priv->unity_environment)
+    {
+      check_title_visibility (bar);
+
+      if (gtk_window_is_maximized (window))
+        {
+          gtk_style_context_add_class (gtk_widget_get_style_context (widget), "toolbar-mode");
+          return;
+        }
+
+      gtk_style_context_remove_class (gtk_widget_get_style_context (widget), "toolbar-mode");
+    }
 
   if (!priv->shows_wm_decorations)
     return;
@@ -315,8 +363,6 @@ _gtk_header_bar_update_window_buttons (GtkHeaderBar *bar)
       g_free (layout_desc);
       layout_desc = g_strdup (priv->decoration_layout);
     }
-
-  window = GTK_WINDOW (toplevel);
 
   if (!shown_by_shell && gtk_window_get_application (window))
     menu = gtk_application_get_app_menu (gtk_window_get_application (window));
@@ -588,6 +634,8 @@ construct_label_box (GtkHeaderBar *bar)
                                       &priv->subtitle_label);
   gtk_header_bar_reorder_css_node (bar, GTK_PACK_START, priv->label_box);
   gtk_widget_set_parent (priv->label_box, GTK_WIDGET (bar));
+
+  check_title_visibility (bar);
 }
 
 static gint
@@ -1907,6 +1955,22 @@ gtk_header_bar_realize (GtkWidget *widget)
   GtkSettings *settings;
 
   GTK_WIDGET_CLASS (gtk_header_bar_parent_class)->realize (widget);
+
+#ifdef GDK_WINDOWING_X11
+  GtkHeaderBar *bar;
+  GtkHeaderBarPrivate *priv;
+  GdkScreen *screen;
+
+  bar = GTK_HEADER_BAR (widget);
+  priv = gtk_header_bar_get_instance_private (bar);
+  screen = gtk_widget_get_screen (widget);
+
+  if (GDK_IS_X11_SCREEN (screen))
+    {
+      GdkAtom unity_atom = gdk_atom_intern_static_string ("_UNITY_SHELL");
+      priv->unity_environment = gdk_x11_screen_supports_net_wm_hint (screen, unity_atom);
+    }
+#endif
 
   settings = gtk_widget_get_settings (widget);
   g_signal_connect_swapped (settings, "notify::gtk-shell-shows-app-menu",
