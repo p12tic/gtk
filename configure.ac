@@ -1921,13 +1921,8 @@ tests/visuals/Makefile
 testsuite/Makefile
 testsuite/a11y/Makefile
 testsuite/a11y/state/Makefile
-testsuite/css/Makefile
-testsuite/css/parser/Makefile
-testsuite/css/nodes/Makefile
-testsuite/css/style/Makefile
 testsuite/gdk/Makefile
 testsuite/gtk/Makefile
-testsuite/reftests/Makefile
 testsuite/tools/Makefile
 docs/Makefile
 docs/reference/Makefile
