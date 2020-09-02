@@ -648,23 +648,30 @@ if os_unix
 endif
 
 # Check for Vulkan support
+message('vulkan enabled: @0@'.format(get_option('vulkan').enabled()))
 vulkan_dep = dependency('vulkan', required: get_option('vulkan'))
-if vulkan_dep.found()
+if get_option('vulkan').enabled() and vulkan_dep.found()
   have_vulkan = true
   vulkan_pkg_found = true
-else
+elif get_option('vulkan').auto()
   have_vulkan = false
   vulkan_pkg_found = false
+
   if cc.get_id() == 'msvc'
     vulkan_libname = 'vulkan-1'
   else
     vulkan_libname = 'vulkan'
   endif
+
   vulkan_dep = cc.find_library(vulkan_libname, required: false)
   if vulkan_dep.found() and cc.has_function('vkCreateInstance', dependencies: vulkan_dep) and cc.has_header('vulkan/vulkan.h')
     have_vulkan = true
     pc_gdk_extra_libs += ['-l@0@'.format(vulkan_libname)]
   endif
+
+else
+  have_vulkan = false
+  vulkan_pkg_found = false
 endif
 
 cloudproviders_dep = dependency('cloudproviders',
@@ -862,7 +869,7 @@ summary('Display backends', display_backends)
 summary('Print backends', print_backends)
 summary('Media backends', media_backends)
 
-summary('Vulkan support', vulkan_dep.found(), section: 'Features')
+summary('Vulkan support', have_vulkan, section: 'Features')
 summary('Cloud support', cloudproviders_dep.found(), section: 'Features')
 summary('Sysprof support', libsysprof_capture_dep.found(), section: 'Features')
 summary('Colord support', colord_dep.found(), section: 'Features')
