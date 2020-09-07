@@ -61,6 +61,8 @@ struct _GdkX11DeviceXI2Class
 
 G_DEFINE_TYPE (GdkX11DeviceXI2, gdk_x11_device_xi2, GDK_TYPE_DEVICE)
 
+/* ZZFIXME */
+#define XINPUT_2_4 1
 
 static void gdk_x11_device_xi2_finalize     (GObject      *object);
 static void gdk_x11_device_xi2_get_property (GObject      *object,
@@ -761,6 +763,20 @@ _gdk_x11_device_xi2_translate_event_mask (GdkX11DeviceManagerXI2 *device_manager
       XISetMask (mask, XI_TouchEnd);
     }
 #endif /* XINPUT_2_2 */
+
+#ifdef XINPUT_2_4
+  /* XInput 2.2 includes multitouch support */
+  if (minor >= 4 &&
+      event_mask & GDK_TOUCHPAD_GESTURE_MASK)
+    {
+      XISetMask (mask, XI_GesturePinchBegin);
+      XISetMask (mask, XI_GesturePinchUpdate);
+      XISetMask (mask, XI_GesturePinchEnd);
+      XISetMask (mask, XI_GestureSwipeBegin);
+      XISetMask (mask, XI_GestureSwipeUpdate);
+      XISetMask (mask, XI_GestureSwipeEnd);
+    }
+#endif
 
   return mask;
 }
