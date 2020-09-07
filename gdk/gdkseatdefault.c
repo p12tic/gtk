@@ -35,7 +35,7 @@ struct _GdkSeatDefaultPrivate
 
 #define KEYBOARD_EVENTS (GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK |    \
                          GDK_FOCUS_CHANGE_MASK)
-#define TOUCH_EVENTS    (GDK_TOUCH_MASK)
+#define TOUCH_EVENTS    (GDK_TOUCH_MASK, GDK_TOUCHPAD_GESTURE_MASK)
 #define POINTER_EVENTS  (GDK_POINTER_MOTION_MASK |                      \
                          GDK_BUTTON_PRESS_MASK |                        \
                          GDK_BUTTON_RELEASE_MASK |                      \
